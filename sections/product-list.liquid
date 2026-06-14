@@ -1,0 +1,222 @@
+{% comment %}
+  Renders a configurable product list from a selected collection.
+{% endcomment %}
+
+{% liquid
+  assign heading = section.settings.heading | default: 'Featured products'
+  assign products_to_show = section.settings.products_to_show
+  assign selected_collection = section.settings.collection
+%}
+
+<section class="product-list">
+  <div class="product-list__header">
+    <h2>{{ heading | escape }}</h2>
+
+    {% if selected_collection != blank and section.settings.show_view_all %}
+      <a class="product-list__view-all" href="{{ selected_collection.url }}">
+        {{ 'View all' | escape }}
+      </a>
+    {% endif %}
+  </div>
+
+  {% if selected_collection != blank and selected_collection.products_count > 0 %}
+    <ul class="product-list__grid" role="list">
+      {% for product in selected_collection.products limit: products_to_show %}
+        <li class="product-card">
+          {% if product.featured_image %}
+            {% render 'image',
+              class: 'product-card__image',
+              image: product.featured_image,
+              url: product.url,
+              width: 700,
+              height: 700,
+              crop: 'center'
+            %}
+          {% else %}
+            <a class="product-card__placeholder" href="{{ product.url }}" aria-label="{{ product.title | escape }}">
+              {{ 'product-1' | placeholder_svg_tag }}
+            </a>
+          {% endif %}
+
+          <div class="product-card__content">
+            <h3 class="product-card__title">
+              <a href="{{ product.url }}">{{ product.title | escape }}</a>
+            </h3>
+
+            <p class="product-card__price">
+              {% if product.price_varies %}
+                {{ product.price_min | money }}+
+              {% else %}
+                {{ product.price | money }}
+              {% endif %}
+            </p>
+
+            {% unless product.available %}
+              <p class="product-card__badge">{{ 'Sold out' | escape }}</p>
+            {% endunless %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="product-list__empty">
+      <p>Select a collection in the theme editor to show products here.</p>
+    </div>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .product-list {
+    width: 100%;
+    padding: 48px 0;
+  }
+
+  .product-list__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .product-list__header h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.1;
+  }
+
+  .product-list__view-all {
+    color: currentcolor;
+    font-weight: 600;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    white-space: nowrap;
+  }
+
+  .product-list__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .product-card {
+    min-width: 0;
+  }
+
+  .product-card__image,
+  .product-card__placeholder {
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid rgb(224, 224, 224);
+    border-radius: 8px;
+    background-color: rgb(246, 246, 247);
+  }
+
+  .product-card__image img,
+  .product-card__placeholder svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-card__content {
+    display: grid;
+    gap: 6px;
+    padding-top: 12px;
+  }
+
+  .product-card__title {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .product-card__title a {
+    color: currentcolor;
+    text-decoration: none;
+  }
+
+  .product-card__title a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .product-card__price {
+    color: rgb(92, 95, 98);
+    font-weight: 600;
+  }
+
+  .product-card__badge {
+    width: fit-content;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: rgb(235, 236, 237);
+    color: rgb(92, 95, 98);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .product-list__empty {
+    padding: 24px;
+    border: 1px dashed rgb(186, 191, 195);
+    border-radius: 8px;
+    color: rgb(92, 95, 98);
+  }
+
+  @media (max-width: 640px) {
+    .product-list {
+      padding: 32px 0;
+    }
+
+    .product-list__header {
+      align-items: start;
+      flex-direction: column;
+    }
+
+    .product-list__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product list",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured products"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Show view all link",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product list",
+      "category": "Products"
+    }
+  ]
+}
+{% endschema %}

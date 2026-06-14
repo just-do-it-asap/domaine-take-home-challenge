@@ -1,160 +1,154 @@
-<h1 align="center" style="position: relative;">
-  <br>
-    <img src="./assets/shoppy-x-ray.svg" alt="logo" width="200">
-  <br>
-  Shopify Skeleton Theme
-</h1>
+# Domaine Product Card Assessment
 
-A minimal, carefully structured Shopify theme designed to help you quickly get started. Designed with modularity, maintainability, and Shopify's best practices in mind.
+## Project Overview
 
-<p align="center">
-  <a href="./LICENSE.md"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License"></a>
-  <a href="./actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Shopify/skeleton-theme/actions/workflows/ci.yml/badge.svg"></a>
-</p>
+This repository contains a custom Shopify theme implementation for the Domaine take-home assessment. The work adds a reusable product card component built from scratch with Liquid, TailwindCSS, and lightweight JavaScript inside the existing Shopify Skeleton Theme.
 
-## Getting started
+The demo card is configured for the product handle `classic-cotton-tee` and can also be pointed at another product through the Shopify Theme Editor.
 
-### Prerequisites
+## Live Prototype Placeholder
 
-Before starting, ensure you have the latest Shopify CLI installed:
+Add the final Shopify preview link here after pushing the theme:
 
-- [Shopify CLI](https://shopify.dev/docs/api/shopify-cli) – helps you download, upload, preview themes, and streamline your workflows
+`TODO: Shopify preview URL`
 
-If you use VS Code:
+## GitHub Repository Placeholder
 
-- [Shopify Liquid VS Code Extension](https://shopify.dev/docs/storefronts/themes/tools/shopify-liquid-vscode) – provides syntax highlighting, linting, inline documentation, and auto-completion specifically designed for Liquid templates
+Add the submitted repository URL here:
 
-### Clone
+`TODO: GitHub repository URL`
 
-Clone this repository using Git or Shopify CLI:
+## Tech Stack
+
+- Shopify Skeleton Theme
+- Shopify Liquid and JSON templates
+- TailwindCSS CLI
+- Vanilla JavaScript
+- Shopify CLI and Theme Check
+
+## Implemented Requirements
+
+- Sale badge based on variant-level `compare_at_price > price`
+- Current price and compare-at markdown price
+- Product title, vendor, and price row
+- Color swatches generated from the product color option
+- Swatch click updates image, hover image, price, compare-at price, sale badge, and active state
+- Desktop hover image transition for the selected variant/color
+- Product picker in the demo section
+- Fallback product handle: `classic-cotton-tee`
+- Accessible swatch buttons with labels, `aria-pressed`, keyboard focus states, and no empty controls
+- Responsive card layout with stable image aspect ratio
+
+## Local Setup Instructions
+
+Install dependencies:
 
 ```bash
-git clone git@github.com:Shopify/skeleton-theme.git
-# or
-shopify theme init
+npm install
 ```
 
-### Preview
-
-Preview this theme using Shopify CLI:
+Build Tailwind:
 
 ```bash
-shopify theme dev
+npm run build:css
 ```
 
-## Theme architecture
+Run Tailwind in watch mode while editing:
 
 ```bash
-.
-├── assets          # Stores static assets (CSS, JS, images, fonts, etc.)
-├── blocks          # Reusable, nestable, customizable UI components
-├── config          # Global theme settings and customization options
-├── layout          # Top-level wrappers for pages (layout templates)
-├── locales         # Translation files for theme internationalization
-├── sections        # Modular full-width page components
-├── snippets        # Reusable Liquid code or HTML fragments
-└── templates       # Templates combining sections to define page structures
+npm run dev:css
 ```
 
-To learn more, refer to the [theme architecture documentation](https://shopify.dev/docs/storefronts/themes/architecture).
+Run Theme Check:
 
-### Templates
+```bash
+npm run check
+```
 
-[Templates](https://shopify.dev/docs/storefronts/themes/architecture/templates#template-types) control what's rendered on each type of page in a theme.
+## Shopify Preview Instructions
 
-The Skeleton Theme scaffolds [JSON templates](https://shopify.dev/docs/storefronts/themes/architecture/templates/json-templates) to make it easy for merchants to customize their store.
+Start the local Shopify theme server:
 
-None of the template types are required, and not all of them are included in the Skeleton Theme. Refer to the [template types reference](https://shopify.dev/docs/storefronts/themes/architecture/templates#template-types) for a full list.
+```bash
+npm run dev:shopify
+```
 
-### Sections
+Or run the equivalent command directly:
 
-[Sections](https://shopify.dev/docs/storefronts/themes/architecture/sections) are Liquid files that allow you to create reusable modules of content that can be customized by merchants. They can also include blocks which allow merchants to add, remove, and reorder content within a section.
+```bash
+shopify theme dev --store domain-take-home-challenge.myshopify.com
+```
 
-Sections are made customizable by including a `{% schema %}` in the body. For more information, refer to the [section schema documentation](https://shopify.dev/docs/storefronts/themes/architecture/sections/section-schema).
+Demo product:
 
-### Blocks
+`https://domain-take-home-challenge.myshopify.com/products/classic-cotton-tee`
 
-[Blocks](https://shopify.dev/docs/storefronts/themes/architecture/blocks) let developers create flexible layouts by breaking down sections into smaller, reusable pieces of Liquid. Each block has its own set of settings, and can be added, removed, and reordered within a section.
+Demo page template:
 
-Blocks are made customizable by including a `{% schema %}` in the body. For more information, refer to the [block schema documentation](https://shopify.dev/docs/storefronts/themes/architecture/blocks/theme-blocks/schema).
+1. In Shopify Admin, create or open a page for the assessment.
+2. Assign the page template `page.domaine-assessment`.
+3. Open the page preview from the theme preview URL.
+4. In the Theme Editor, select the Domaine product card demo section and optionally choose a product.
 
-## Schemas
+For a shareable prototype link, push an unpublished theme:
 
-When developing components defined by schema settings, we recommend these guidelines to simplify your code:
+```bash
+shopify theme push --unpublished
+```
 
-- **Single property settings**: For settings that correspond to a single CSS property, use CSS variables:
+Then open Shopify Admin > Online Store > Themes and copy the preview link for the unpublished theme.
 
-  ```liquid
-  <div class="collection" style="--gap: {{ block.settings.gap }}px">
-    ...
-  </div>
+## Technical Decisions
 
-  {% stylesheet %}
-    .collection {
-      gap: var(--gap);
-    }
-  {% endstylesheet %}
+The product card is a snippet because it is the reusable unit. It can be rendered from a demo section now and reused later in grids, recommendations, featured product modules, or collection templates.
 
-  {% schema %}
-  {
-    "settings": [{
-      "type": "range",
-      "label": "gap",
-      "id": "gap",
-      "min": 0,
-      "max": 100,
-      "unit": "px",
-      "default": 0,
-    }]
-  }
-  {% endschema %}
-  ```
+The demo is a section because Shopify merchants can configure it in the Theme Editor. The section exposes a product picker and falls back to `all_products['classic-cotton-tee']` when no product is selected.
 
-- **Multiple property settings**: For settings that control multiple CSS properties, use CSS classes:
+Tailwind is compiled into `assets/domaine.css` and loaded globally from `layout/theme.liquid`. The component still keeps a `domaine-scope` class around the new UI so the new styling stays easy to identify and maintain.
 
-  ```liquid
-  <div class="collection {{ block.settings.layout }}">
-    ...
-  </div>
+JavaScript is intentionally small and presentation-focused. Liquid renders the product data and per-swatch metadata; JavaScript only switches the active swatch, images, prices, and sale visibility.
 
-  {% stylesheet %}
-    .collection--full-width {
-      /* multiple styles */
-    }
-    .collection--narrow {
-      /* multiple styles */
-    }
-  {% endstylesheet %}
+## Product, Variant, And Image Logic
 
-  {% schema %}
-  {
-    "settings": [{
-      "type": "select",
-      "id": "layout",
-      "label": "layout",
-      "values": [
-        { "value": "collection--full-width", "label": "t:options.full" },
-        { "value": "collection--narrow", "label": "t:options.narrow" }
-      ]
-    }]
-  }
-  {% endschema %}
-  ```
+Initial variant selection uses `product.selected_or_first_available_variant`, with the product featured media as the image fallback.
 
-## CSS & JavaScript
+Swatches are generated from the first product option whose name contains `color` or `colour`. Each color swatch uses the first matching available variant where possible, then falls back to the first variant with that color.
 
-For CSS and JavaScript, we recommend using the [`{% stylesheet %}`](https://shopify.dev/docs/api/liquid/tags#stylesheet) and [`{% javascript %}`](https://shopify.dev/docs/api/liquid/tags/javascript) tags. They can be included multiple times, but the code will only appear once.
+Primary imagery prefers the selected variant featured media. If the variant does not have featured media, the card uses the product featured media or featured image.
 
-### `critical.css`
+Secondary hover imagery first looks for another product image whose alt text contains the selected color value. If no color-matched secondary image exists, it falls back to the first different product image. If there is no second image, it uses the primary image so the card never renders a broken hover image.
 
-The Skeleton Theme explicitly separates essential CSS necessary for every page into a dedicated `critical.css` file.
+Sale pricing is variant-specific. A variant is treated as on sale when `compare_at_price` is greater than `price`; otherwise the sale badge and compare-at price are hidden.
 
-## Contributing
+## QA Checklist
 
-We're excited for your contributions to the Skeleton Theme! This repository aims to remain as lean, lightweight, and fundamental as possible, and we kindly ask your contributions to align with this intention.
+- [x] Tailwind builds into `assets/domaine.css`
+- [x] Shopify Theme Check passes
+- [ ] Product card matches the intended premium ecommerce direction in browser
+- [ ] Product title is visible
+- [ ] Brand/vendor is visible
+- [ ] Price is visible
+- [ ] Compare-at price is visible for sale variants
+- [ ] Sale badge appears only for sale variants
+- [ ] Swatches are clickable
+- [ ] Active swatch state is visible
+- [ ] Primary image changes after swatch click
+- [ ] Secondary image appears on desktop hover
+- [ ] Secondary image matches selected color when Shopify image alt text supports it
+- [ ] Mobile layout looks good without relying on hover
+- [ ] Browser console has no JavaScript errors
+- [ ] Working Shopify preview link opens
 
-Visit our [CONTRIBUTING.md](./CONTRIBUTING.md) for a detailed overview of our process, guidelines, and recommendations.
+## Known Limitations
 
-## License
+- Secondary hover image matching depends on Shopify product media quality. For best results, image alt text should include the color value, for example `Classic Cotton Tee - Navy - alternate`.
+- Swatch colors use the option value as a CSS color when possible. Values like `Black`, `White`, `Navy`, or `Red` work directly. More branded color names may need a future color-map setting or metafield.
+- The component updates the card presentation only. It does not add cart behavior or update the product URL query parameter because those were outside the product-card assignment scope.
 
-Skeleton Theme is open-sourced under the [MIT](./LICENSE.md) License.
+## Future Improvements
+
+- Add a swatch color metafield or theme setting map for non-CSS color names.
+- Add optional quick-add behavior.
+- Add unit-level JavaScript tests for variant switching.
+- Extend the snippet to support collection-grid density variants.
+- Add richer image matching if product media alt text follows a stricter naming convention.

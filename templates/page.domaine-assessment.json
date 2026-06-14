@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "main": {
+      "type": "domaine-product-card-demo",
+      "settings": {
+        "product": "classic-cotton-tee"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

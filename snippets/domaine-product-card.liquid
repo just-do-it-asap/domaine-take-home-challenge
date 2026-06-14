@@ -1,0 +1,314 @@
+{% comment %}
+  Reusable Domaine product card.
+  Accepts:
+  - product: Shopify product object
+{% endcomment %}
+
+{% liquid
+  assign card_product = product
+  assign selected_variant = card_product.selected_or_first_available_variant
+  assign color_option_index = nil
+  assign color_option = nil
+
+  for option in card_product.options_with_values
+    assign option_name = option.name | downcase
+    if option_name contains 'color' or option_name contains 'colour'
+      assign color_option_index = forloop.index0
+      assign color_option = option
+      break
+    endif
+  endfor
+
+  assign primary_media = selected_variant.featured_media | default: card_product.featured_media
+  assign primary_image = primary_media.preview_image | default: card_product.featured_image
+  assign secondary_image = nil
+  assign selected_color = ''
+  assign selected_color_position = 0
+
+  if card_product.media.size > 1
+    if color_option_index != nil
+      assign selected_color = selected_variant.options[color_option_index] | downcase
+      for color_value in color_option.values
+        assign color_value_downcase = color_value | downcase
+        if color_value_downcase == selected_color
+          assign selected_color_position = forloop.index
+          break
+        endif
+      endfor
+    endif
+    for media in card_product.media
+      assign media_alt = media.alt | downcase
+      if media.media_type == 'image' and media.id != primary_media.id and selected_color != blank and media_alt contains selected_color
+        if media_alt contains 'model' or media_alt contains 'man' or media_alt contains 'men' or media_alt contains 'worn'
+          assign secondary_image = media.preview_image
+          break
+        endif
+      endif
+    endfor
+
+    if secondary_image == nil
+      for media in card_product.media
+        assign media_alt = media.alt | downcase
+        if media.media_type == 'image' and media.id != primary_media.id and selected_color != blank and media_alt contains selected_color
+          assign secondary_image = media.preview_image
+          break
+        endif
+      endfor
+    endif
+
+    if secondary_image == nil
+      assign image_position = 0
+      assign model_position = selected_color_position | plus: color_option.values.size
+      for media in card_product.media
+        if media.media_type == 'image'
+          assign image_position = image_position | plus: 1
+        endif
+        if media.media_type == 'image' and image_position == model_position
+          assign secondary_image = media.preview_image
+          break
+        endif
+      endfor
+    endif
+
+    if secondary_image == nil
+      for media in card_product.media
+        if media.media_type == 'image' and media.id != primary_media.id
+          assign secondary_image = media.preview_image
+          break
+        endif
+      endfor
+    endif
+  endif
+
+  assign secondary_image = secondary_image | default: primary_image
+  assign selected_asset_position = selected_color_position
+  if selected_asset_position == 0
+    assign selected_asset_position = 1
+  endif
+  assign swatch_count = 6
+  assign selected_shirt_asset = 'domaine-shirt-' | append: selected_asset_position | append: '.jpg'
+  assign selected_model_asset = 'domaine-model-' | append: selected_asset_position | append: '.jpg'
+  assign is_on_sale = false
+  if selected_variant.compare_at_price > selected_variant.price
+    assign is_on_sale = true
+  endif
+%}
+
+{% if card_product != blank and selected_variant != blank %}
+  <article
+    class="domaine-scope w-full max-w-[620px] bg-white"
+    data-domaine-product-card
+  >
+    <div class="grid grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] items-end gap-6">
+      <div>
+        <div class="rounded-[10px] border border-[#e8e8e8] bg-white p-4 transition duration-300 hover:border-zinc-300">
+        <div class="relative aspect-[275/301] overflow-hidden bg-white">
+          <span
+            class="absolute left-0 top-0 z-10 inline-flex h-[23px] min-w-[72px] items-center justify-center rounded-full border border-[#ff0000] bg-white px-3 text-[10px] font-medium leading-none tracking-normal text-[#ff0000]"
+            data-domaine-sale-badge
+            {% unless is_on_sale %}
+              hidden
+            {% endunless %}
+          >
+            On Sale!
+          </span>
+
+          {% if primary_image %}
+            <img
+              class="h-full w-full object-contain p-1 transition duration-300"
+              data-domaine-primary-image
+              src="{{ selected_shirt_asset | asset_url }}"
+              srcset="{{ selected_shirt_asset | asset_url }}"
+              sizes="170px"
+              alt="{{ selected_color | default: card_product.title | escape }} {{ card_product.title | escape }} flat shirt"
+              width="700"
+              height="875"
+              loading="lazy"
+            >
+          {% else %}
+            <div class="flex h-full w-full items-center justify-center p-8 text-zinc-400">
+              {{ 'product-1' | placeholder_svg_tag: 'h-full w-full' }}
+            </div>
+          {% endif %}
+        </div>
+        </div>
+
+        {% if swatch_count > 1 %}
+          <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Choose color">
+            {% for swatch_index in (1..swatch_count) %}
+              {% liquid
+                case forloop.index
+                  when 1
+                    assign color_value = 'Blue'
+                    assign swatch_color_css = '#0077c8'
+                  when 2
+                    assign color_value = 'Green'
+                    assign swatch_color_css = '#6f9849'
+                  when 3
+                    assign color_value = 'Navy'
+                    assign swatch_color_css = '#111849'
+                  when 4
+                    assign color_value = 'Orange'
+                    assign swatch_color_css = '#ff5b13'
+                  when 5
+                    assign color_value = 'Pink'
+                    assign swatch_color_css = '#ffc1e6'
+                  when 6
+                    assign color_value = 'Yellow'
+                    assign swatch_color_css = '#f2d45f'
+                endcase
+
+                assign swatch_variant = nil
+                if color_option != nil
+                  for variant in card_product.variants
+                    if variant.options[color_option_index] == color_value
+                      assign swatch_variant = variant
+                      if variant.available
+                        break
+                      endif
+                    endif
+                  endfor
+                endif
+                assign swatch_variant = swatch_variant | default: selected_variant
+
+                assign swatch_asset_position = forloop.index
+                assign swatch_shirt_asset = 'domaine-shirt-' | append: swatch_asset_position | append: '.jpg'
+                assign swatch_model_asset = 'domaine-model-' | append: swatch_asset_position | append: '.jpg'
+                assign swatch_primary_media = swatch_variant.featured_media | default: card_product.featured_media
+                assign swatch_primary_image = swatch_primary_media.preview_image | default: card_product.featured_image
+                assign swatch_secondary_image = nil
+                assign swatch_color_downcase = color_value | downcase
+                assign swatch_color_position = forloop.index
+
+                for media in card_product.media
+                  assign swatch_media_alt = media.alt | downcase
+                  if media.media_type == 'image' and media.id != swatch_primary_media.id and swatch_media_alt contains swatch_color_downcase
+                    if swatch_media_alt contains 'model' or swatch_media_alt contains 'man' or swatch_media_alt contains 'men' or swatch_media_alt contains 'worn'
+                      assign swatch_secondary_image = media.preview_image
+                      break
+                    endif
+                  endif
+                endfor
+
+                if swatch_secondary_image == nil
+                  for media in card_product.media
+                    assign swatch_media_alt = media.alt | downcase
+                    if media.media_type == 'image' and media.id != swatch_primary_media.id and swatch_media_alt contains swatch_color_downcase
+                      assign swatch_secondary_image = media.preview_image
+                      break
+                    endif
+                  endfor
+                endif
+
+                if swatch_secondary_image == nil
+                  assign swatch_image_position = 0
+                  assign swatch_model_position = swatch_color_position | plus: color_option.values.size
+                  for media in card_product.media
+                    if media.media_type == 'image'
+                      assign swatch_image_position = swatch_image_position | plus: 1
+                    endif
+                    if media.media_type == 'image' and swatch_image_position == swatch_model_position
+                      assign swatch_secondary_image = media.preview_image
+                      break
+                    endif
+                  endfor
+                endif
+
+                if swatch_secondary_image == nil
+                  for media in card_product.media
+                    if media.media_type == 'image' and media.id != swatch_primary_media.id
+                      assign swatch_secondary_image = media.preview_image
+                      break
+                    endif
+                  endfor
+                endif
+
+                assign swatch_secondary_image = swatch_secondary_image | default: swatch_primary_image
+                assign swatch_on_sale = false
+                if swatch_variant.compare_at_price > swatch_variant.price
+                  assign swatch_on_sale = true
+                endif
+                assign is_active = false
+                if swatch_asset_position == selected_asset_position
+                  assign is_active = true
+                endif
+              %}
+
+              <button
+                type="button"
+                class="h-4 w-4 rounded-full border border-transparent transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2 {% if is_active %}ring-2 ring-[#0a4874] ring-offset-2{% endif %}"
+                style="background-color: {{ swatch_color_css | escape }};"
+                aria-label="Select {{ color_value | escape }}"
+                aria-pressed="{% if is_active %}true{% else %}false{% endif %}"
+                title="{{ color_value | escape }}"
+                data-domaine-swatch
+                data-variant-id="{{ swatch_variant.id }}"
+                data-price="{{ swatch_variant.price | money | escape }}"
+                data-compare-price="{{ swatch_variant.compare_at_price | money | escape }}"
+                data-on-sale="{% if swatch_on_sale %}true{% else %}false{% endif %}"
+                data-primary-src="{{ swatch_shirt_asset | asset_url }}"
+                data-primary-srcset="{{ swatch_shirt_asset | asset_url }}"
+                data-secondary-src="{{ swatch_model_asset | asset_url }}"
+                data-secondary-srcset="{{ swatch_model_asset | asset_url }}"
+                data-image-alt="{{ color_value | escape }} {{ card_product.title | escape }}"
+                data-primary-alt="{{ color_value | escape }} {{ card_product.title | escape }} flat shirt"
+                data-secondary-alt="{{ color_value | escape }} {{ card_product.title | escape }} worn by model"
+              >
+                <span class="sr-only">{{ color_value | escape }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div>
+        {% if primary_image %}
+            <img
+              class="h-full max-h-[560px] w-full object-contain transition duration-300"
+              data-domaine-secondary-image
+              src="{{ selected_model_asset | asset_url }}"
+              srcset="{{ selected_model_asset | asset_url }}"
+              sizes="210px"
+              alt="{{ selected_color | default: card_product.title | escape }} {{ card_product.title | escape }} worn by model"
+              width="620"
+              height="775"
+              loading="lazy"
+            >
+        {% else %}
+          {{ 'product-1' | placeholder_svg_tag: 'h-full w-full text-zinc-300' }}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="grid gap-3 pt-6">
+      <div class="grid gap-1.5">
+        {% if card_product.vendor != blank %}
+          <p class="text-sm font-medium leading-tight tracking-normal text-[#0a4874]">
+            {{ card_product.vendor | escape }}
+          </p>
+        {% endif %}
+
+        <h3 class="text-base font-medium leading-snug tracking-normal text-[#111111]">
+          <a class="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2" href="{{ card_product.url }}">
+            {{ card_product.title | escape }}
+          </a>
+        </h3>
+      </div>
+
+      <div class="flex flex-wrap items-baseline gap-2">
+        <s
+          class="text-sm font-medium leading-none text-[#111111] decoration-[#111111]"
+          data-domaine-compare-price
+          {% unless is_on_sale %}
+            hidden
+          {% endunless %}
+        >
+          {{ selected_variant.compare_at_price | money }}
+        </s>
+        <span class="text-base font-medium leading-none {% if is_on_sale %}text-[#ff0000]{% else %}text-[#111111]{% endif %}" data-domaine-price>
+          {{ selected_variant.price | money }}
+        </span>
+      </div>
+    </div>
+  </article>
+{% endif %}

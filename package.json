@@ -1,0 +1,14 @@
+{
+  "name": "domaine-product-card",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:css": "tailwindcss -i ./src/tailwind.css -o ./assets/domaine.css --watch",
+    "build:css": "tailwindcss -i ./src/tailwind.css -o ./assets/domaine.css --minify",
+    "dev:shopify": "shopify theme dev --store domain-take-home-challenge.myshopify.com",
+    "check": "shopify theme check"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

@@ -35,4 +35,8 @@
   [data-domaine-product-card][data-has-secondary="true"]:hover [data-domaine-secondary-image] {
     opacity: 1;
   }
+
+  [data-domaine-sale-badge][hidden] {
+    display: none;
+  }
 }

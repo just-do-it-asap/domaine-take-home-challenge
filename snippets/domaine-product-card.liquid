@@ -157,23 +157,32 @@
           <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Choose color">
             {% for color_value in color_option.values %}
               {% liquid
-                assign color_value_downcase = color_value | downcase
+                assign color_value_name = color_value.name | default: color_value
+                assign color_value_downcase = color_value_name | downcase
                 assign color_value_key = color_value_downcase | replace: ' ', '_'
+                assign swatch = color_value.swatch
+                assign swatch_image = swatch.image
+                assign swatch_color = swatch.color
                 assign swatch_color_css = '#d4d4d8'
-                case color_value_downcase
-                  when 'blue'
-                    assign swatch_color_css = '#0077c8'
-                  when 'green'
-                    assign swatch_color_css = '#6f9849'
-                  when 'navy'
-                    assign swatch_color_css = '#111849'
-                  when 'orange'
-                    assign swatch_color_css = '#ff5b13'
-                  when 'pink'
-                    assign swatch_color_css = '#ffc1e6'
-                  when 'yellow'
-                    assign swatch_color_css = '#f2d45f'
-                endcase
+
+                if swatch_color != blank
+                  assign swatch_color_css = swatch_color
+                else
+                  case color_value_downcase
+                    when 'blue'
+                      assign swatch_color_css = '#00639c'
+                    when 'green'
+                      assign swatch_color_css = '#006600'
+                    when 'navy'
+                      assign swatch_color_css = '#19264b'
+                    when 'orange'
+                      assign swatch_color_css = '#ff6633'
+                    when 'pink'
+                      assign swatch_color_css = '#ffccff'
+                    when 'yellow'
+                      assign swatch_color_css = '#fce78d'
+                  endcase
+                endif
 
                 assign swatch_variant = nil
                 for variant in card_product.variants
@@ -269,11 +278,10 @@
 
               <button
                 type="button"
-                class="h-4 w-4 rounded-full border border-transparent transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2 {% if is_active %}ring-2 ring-[#0a4874] ring-offset-2{% endif %}"
-                style="background-color: {{ swatch_color_css | escape }};"
-                aria-label="Select {{ color_value | escape }}"
+                class="flex h-[23px] w-[23px] items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2 {% if is_active %}border-[#0a4874]{% else %}border-transparent{% endif %}"
+                aria-label="Select {{ color_value_name | escape }}"
                 aria-pressed="{% if is_active %}true{% else %}false{% endif %}"
-                title="{{ color_value | escape }}"
+                title="{{ color_value_name | escape }}"
                 data-domaine-swatch
                 data-variant-id="{{ swatch_variant.id }}"
                 data-price="{{ swatch_variant.price | money | escape }}"
@@ -287,11 +295,16 @@
                   data-secondary-src="{{ swatch_secondary_image | image_url: width: 700 }}"
                   data-secondary-srcset="{{ swatch_secondary_image | image_url: width: 350 }} 350w, {{ swatch_secondary_image | image_url: width: 700 }} 700w, {{ swatch_secondary_image | image_url: width: 1000 }} 1000w"
                 {% endif %}
-                data-image-alt="{{ color_value | escape }} {{ card_product.title | escape }}"
-                data-primary-alt="{{ color_value | escape }} {{ card_product.title | escape }} flat shirt"
-                data-secondary-alt="{{ color_value | escape }} {{ card_product.title | escape }} worn by model"
+                data-image-alt="{{ color_value_name | escape }} {{ card_product.title | escape }}"
+                data-primary-alt="{{ color_value_name | escape }} {{ card_product.title | escape }} flat shirt"
+                data-secondary-alt="{{ color_value_name | escape }} {{ card_product.title | escape }} worn by model"
               >
-                <span class="sr-only">{{ color_value | escape }}</span>
+                <span
+                  class="block h-5 w-5 rounded-full bg-cover bg-center"
+                  style="{% if swatch_image != blank %}background-image: url('{{ swatch_image | image_url: width: 48 }}');{% else %}background-color: {{ swatch_color_css | escape }};{% endif %}"
+                  aria-hidden="true"
+                ></span>
+                <span class="sr-only">{{ color_value_name | escape }}</span>
               </button>
             {% endfor %}
           </div>

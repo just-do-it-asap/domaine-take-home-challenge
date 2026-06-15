@@ -41,6 +41,16 @@
     });
   }
 
+  function updateVariantOptionState(variantOptions, activeVariantId, activeColorValue) {
+    variantOptions.forEach((option) => {
+      const isActive = activeVariantId
+          ? option.dataset.variantId === activeVariantId
+          : !!activeColorValue && option.dataset.colorValue === activeColorValue;
+
+      option.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  }
+
   function initDomaineProductCard(card) {
     const primaryImage = card.querySelector('[data-domaine-primary-image]');
     const secondaryImage = card.querySelector('[data-domaine-secondary-image]');
@@ -49,6 +59,8 @@
     const price = card.querySelector('[data-domaine-price]');
     const comparePrice = card.querySelector('[data-domaine-compare-price]');
     const swatches = [...card.querySelectorAll('[data-domaine-swatch]')];
+    const productContext = card.parentElement || card;
+    const variantOptions = [...productContext.querySelectorAll('[data-domaine-variant-option]')];
 
     function setImageView(view) {
       const hasSecondary = card.dataset.hasSecondary === 'true';
@@ -76,46 +88,65 @@
 
     setImageView('primary');
 
+    function selectSwatch(swatch, activeVariantIdOverride) {
+      if (!swatch) return;
+
+      const primarySrc = swatch.dataset.primarySrc || '';
+      const primarySrcset = swatch.dataset.primarySrcset || '';
+      const secondarySrc = swatch.dataset.secondarySrc || '';
+      const secondarySrcset = swatch.dataset.secondarySrcset || '';
+      const isOnSale = swatch.dataset.onSale === 'true';
+      const nextPrice = swatch.dataset.price || '';
+      const nextComparePrice = swatch.dataset.comparePrice || '';
+      const nextVariantId = activeVariantIdOverride || swatch.dataset.variantId || '';
+      const nextColorValue = swatch.dataset.colorValue || '';
+
+      setImage(
+          primaryImage,
+          primarySrc,
+          primarySrcset,
+          swatch.dataset.primaryAlt || swatch.dataset.imageAlt || ''
+      );
+
+      setImage(
+          secondaryImage,
+          secondarySrc,
+          secondarySrcset,
+          swatch.dataset.secondaryAlt || swatch.dataset.imageAlt || ''
+      );
+
+      card.dataset.hasSecondary = secondarySrc ? 'true' : 'false';
+      setImageView('primary');
+
+      if (price && nextPrice) {
+        price.textContent = nextPrice;
+        price.classList.toggle('text-[#ff0000]', isOnSale);
+        price.classList.toggle('text-[#111111]', !isOnSale);
+      }
+
+      if (comparePrice) {
+        comparePrice.textContent = nextComparePrice;
+        toggleHidden(comparePrice, !isOnSale || !nextComparePrice);
+      }
+
+      toggleHidden(saleBadge, !isOnSale);
+      updateSwatchState(swatches, swatch);
+      updateVariantOptionState(variantOptions, nextVariantId, nextColorValue);
+    }
+
     swatches.forEach((swatch) => {
       swatch.addEventListener('click', () => {
-        const primarySrc = swatch.dataset.primarySrc || '';
-        const primarySrcset = swatch.dataset.primarySrcset || '';
-        const secondarySrc = swatch.dataset.secondarySrc || '';
-        const secondarySrcset = swatch.dataset.secondarySrcset || '';
-        const isOnSale = swatch.dataset.onSale === 'true';
-        const nextPrice = swatch.dataset.price || '';
-        const nextComparePrice = swatch.dataset.comparePrice || '';
+        selectSwatch(swatch);
+      });
+    });
 
-        setImage(
-            primaryImage,
-            primarySrc,
-            primarySrcset,
-            swatch.dataset.primaryAlt || swatch.dataset.imageAlt || ''
-        );
+    variantOptions.forEach((option) => {
+      option.addEventListener('click', () => {
+        const matchingSwatch =
+            swatches.find((swatch) => swatch.dataset.variantId === option.dataset.variantId) ||
+            swatches.find((swatch) => swatch.dataset.colorValue === option.dataset.colorValue);
 
-        setImage(
-            secondaryImage,
-            secondarySrc,
-            secondarySrcset,
-            swatch.dataset.secondaryAlt || swatch.dataset.imageAlt || ''
-        );
-
-        card.dataset.hasSecondary = secondarySrc ? 'true' : 'false';
-        setImageView('primary');
-
-        if (price && nextPrice) {
-          price.textContent = nextPrice;
-          price.classList.toggle('text-[#ff0000]', isOnSale);
-          price.classList.toggle('text-[#111111]', !isOnSale);
-        }
-
-        if (comparePrice) {
-          comparePrice.textContent = nextComparePrice;
-          toggleHidden(comparePrice, !isOnSale || !nextComparePrice);
-        }
-
-        toggleHidden(saleBadge, !isOnSale);
-        updateSwatchState(swatches, swatch);
+        selectSwatch(matchingSwatch, option.dataset.variantId || '');
       });
     });
   }

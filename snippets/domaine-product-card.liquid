@@ -325,6 +325,7 @@
                 title="{{ color_value_name | escape }}"
                 data-domaine-swatch
                 data-variant-id="{{ swatch_variant.id }}"
+                data-color-value="{{ color_value_downcase | escape }}"
                 data-price="{{ swatch_variant.price | money | escape }}"
                 data-compare-price="{{ swatch_variant.compare_at_price | money | escape }}"
                 data-on-sale="{% if swatch_on_sale %}true{% else %}false{% endif %}"

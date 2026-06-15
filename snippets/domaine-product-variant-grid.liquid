@@ -109,46 +109,61 @@
           if variant.compare_at_price > variant.price
             assign variant_on_sale = true
           endif
+
+          assign is_active = false
+          if variant.id == grid_product.selected_or_first_available_variant.id
+            assign is_active = true
+          endif
         %}
 
-        <li class="rounded-lg border border-zinc-200 bg-white p-3">
-          <div class="grid aspect-square grid-cols-[0.9fr_1.1fr] items-end gap-2 overflow-hidden bg-white">
-            {% if variant_image %}
-              <img
-                class="h-full max-h-[78%] w-full self-center object-contain"
-                src="{{ variant_image | image_url: width: 360 }}"
-                alt="{{ variant_image.alt | default: variant.title | escape }}"
-                width="360"
-                height="360"
-                loading="lazy"
-              >
-            {% endif %}
-
-            {% if variant_secondary_image %}
-              <img
-                class="h-full w-full object-contain"
-                src="{{ variant_secondary_image | image_url: width: 360 }}"
-                alt="{{ variant_secondary_image.alt | default: variant.title | escape }}"
-                width="360"
-                height="360"
-                loading="lazy"
-              >
-            {% endif %}
-          </div>
-
-          <div class="mt-3 grid gap-1">
-            <p class="text-sm font-medium leading-snug text-zinc-950">
-              {{ variant.title | escape }}
-            </p>
-            <p class="flex flex-wrap items-baseline gap-2 text-sm">
-              {% if variant_on_sale %}
-                <s class="text-zinc-500">{{ variant.compare_at_price | money }}</s>
+        <li>
+          <button
+            type="button"
+            class="domaine-variant-option block w-full rounded-lg border border-zinc-200 bg-white p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2"
+            data-domaine-variant-option
+            data-variant-id="{{ variant.id }}"
+            data-color-value="{{ variant_color | escape }}"
+            aria-label="Select {{ variant.title | escape }}"
+            aria-pressed="{% if is_active %}true{% else %}false{% endif %}"
+          >
+            <span class="grid aspect-square grid-cols-[0.9fr_1.1fr] items-end gap-2 overflow-hidden bg-white">
+              {% if variant_image %}
+                <img
+                  class="h-full max-h-[78%] w-full self-center object-contain"
+                  src="{{ variant_image | image_url: width: 360 }}"
+                  alt="{{ variant_image.alt | default: variant.title | escape }}"
+                  width="360"
+                  height="360"
+                  loading="lazy"
+                >
               {% endif %}
-              <span class="{% if variant_on_sale %}text-[#ff0000]{% else %}text-zinc-950{% endif %}">
-                {{ variant.price | money }}
+
+              {% if variant_secondary_image %}
+                <img
+                  class="h-full w-full object-contain"
+                  src="{{ variant_secondary_image | image_url: width: 360 }}"
+                  alt="{{ variant_secondary_image.alt | default: variant.title | escape }}"
+                  width="360"
+                  height="360"
+                  loading="lazy"
+                >
+              {% endif %}
+            </span>
+
+            <span class="mt-3 grid gap-1">
+              <span class="text-sm font-medium leading-snug text-zinc-950">
+                {{ variant.title | escape }}
               </span>
-            </p>
-          </div>
+              <span class="flex flex-wrap items-baseline gap-2 text-sm">
+                {% if variant_on_sale %}
+                  <s class="text-zinc-500">{{ variant.compare_at_price | money }}</s>
+                {% endif %}
+                <span class="{% if variant_on_sale %}text-[#ff0000]{% else %}text-zinc-950{% endif %}">
+                  {{ variant.price | money }}
+                </span>
+              </span>
+            </span>
+          </button>
         </li>
       {% endfor %}
     </ul>

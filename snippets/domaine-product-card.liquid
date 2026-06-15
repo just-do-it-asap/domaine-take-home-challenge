@@ -118,14 +118,24 @@
 
 {% if card_product != blank and selected_variant != blank %}
   <article
-    class="domaine-scope group flex w-full max-w-[360px] flex-col bg-white"
+    class="domaine-scope flex w-full max-w-[360px] flex-col bg-white"
     data-domaine-product-card
     data-has-secondary="{% if secondary_image %}true{% else %}false{% endif %}"
+    data-image-view="primary"
   >
     <div class="domaine-card-media block w-full">
       <div class="block w-full">
-        <div class="rounded-[10px] border border-[#e8e8e8] bg-white p-4 transition duration-300 hover:border-zinc-300">
-        <div class="relative aspect-[275/301] overflow-hidden bg-white">
+        <div class="domaine-card-frame rounded-[10px] border border-[#e8e8e8] bg-white p-4 transition duration-300">
+        <button
+          type="button"
+          class="relative block aspect-[275/301] w-full overflow-hidden bg-white p-0"
+          data-domaine-media-toggle
+          aria-label="Show alternate image for {{ card_product.title | escape }}"
+          aria-pressed="false"
+          {% unless secondary_image %}
+            disabled
+          {% endunless %}
+        >
           <span
             class="absolute left-0 top-0 z-10 inline-flex h-[23px] min-w-[72px] items-center justify-center rounded-full border border-[#ff0000] bg-white px-3 text-[10px] font-medium leading-none tracking-normal text-[#ff0000]"
             data-domaine-sale-badge
@@ -153,7 +163,7 @@
           >
 
           <img
-            class="absolute inset-0 h-full w-full object-contain p-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            class="absolute inset-0 h-full w-full object-contain p-1 opacity-0 transition-opacity duration-300"
             data-domaine-secondary-image
             {% if secondary_image %}
               src="{{ secondary_image | image_url: width: 700 }}"
@@ -167,7 +177,7 @@
             height="875"
             loading="lazy"
           >
-        </div>
+        </button>
         </div>
 
         {% if color_option != nil and color_option.values.size > 1 %}
@@ -310,7 +320,6 @@
               <button
                 type="button"
                 class="flex h-[23px] w-[23px] items-center justify-center rounded-full p-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2"
-                style="border: 1px solid {% if is_active %}#0a4874{% else %}transparent{% endif %};"
                 aria-label="Select {{ color_value_name | escape }}"
                 aria-pressed="{% if is_active %}true{% else %}false{% endif %}"
                 title="{{ color_value_name | escape }}"
@@ -332,10 +341,16 @@
                 data-secondary-alt="{{ color_value_name | escape }} {{ card_product.title | escape }} worn by model"
               >
                 <span
-                  class="block rounded-full bg-cover bg-center"
-                  style="width: 20px; height: 20px; background-color: {{ swatch_color_css | escape }};"
+                  class="flex h-[23px] w-[23px] items-center justify-center rounded-full border"
+                  style="border-color: {% if is_active %}#0a4874{% else %}transparent{% endif %};"
+                  data-domaine-swatch-ring
                   aria-hidden="true"
-                ></span>
+                >
+                  <span
+                    class="block rounded-full bg-cover bg-center"
+                    style="width: 20px; height: 20px; background-color: {{ swatch_color_css | escape }};"
+                  ></span>
+                </span>
                 <span class="sr-only">{{ color_value_name | escape }}</span>
               </button>
             {% endfor %}

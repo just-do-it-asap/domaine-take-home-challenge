@@ -5,7 +5,7 @@
   "scripts": {
     "dev:css": "tailwindcss -i ./src/tailwind.css -o ./assets/domaine.css --watch",
     "build:css": "tailwindcss -i ./src/tailwind.css -o ./assets/domaine.css --minify",
-    "dev:shopify": "shopify theme dev --store domain-take-home-challenge.myshopify.com",
+    "dev:shopify": "shopify theme dev --store domain-take-home-challenge.myshopify.com --host 0.0.0.0 --port 9292",
     "check": "shopify theme check"
   },
   "devDependencies": {

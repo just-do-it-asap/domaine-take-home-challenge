@@ -31,19 +31,50 @@
   function updateSwatchState(swatches, activeSwatch) {
     swatches.forEach((swatch) => {
       const isActive = swatch === activeSwatch;
+      const swatchRing = swatch.querySelector('[data-domaine-swatch-ring]');
 
       swatch.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      swatch.style.border = `1px solid ${isActive ? '#0a4874' : 'transparent'}`;
+
+      if (swatchRing) {
+        swatchRing.style.borderColor = isActive ? '#0a4874' : 'transparent';
+      }
     });
   }
 
   function initDomaineProductCard(card) {
     const primaryImage = card.querySelector('[data-domaine-primary-image]');
     const secondaryImage = card.querySelector('[data-domaine-secondary-image]');
+    const mediaToggle = card.querySelector('[data-domaine-media-toggle]');
     const saleBadge = card.querySelector('[data-domaine-sale-badge]');
     const price = card.querySelector('[data-domaine-price]');
     const comparePrice = card.querySelector('[data-domaine-compare-price]');
     const swatches = [...card.querySelectorAll('[data-domaine-swatch]')];
+
+    function setImageView(view) {
+      const hasSecondary = card.dataset.hasSecondary === 'true';
+      const nextView = hasSecondary && view === 'secondary' ? 'secondary' : 'primary';
+
+      card.dataset.imageView = nextView;
+
+      if (mediaToggle) {
+        mediaToggle.disabled = !hasSecondary;
+        mediaToggle.setAttribute('aria-pressed', nextView === 'secondary' ? 'true' : 'false');
+        mediaToggle.setAttribute(
+            'aria-label',
+            nextView === 'secondary' ? 'Show primary product image' : 'Show alternate product image'
+        );
+      }
+    }
+
+    if (mediaToggle) {
+      mediaToggle.addEventListener('click', () => {
+        if (mediaToggle.disabled) return;
+
+        setImageView(card.dataset.imageView === 'secondary' ? 'primary' : 'secondary');
+      });
+    }
+
+    setImageView('primary');
 
     swatches.forEach((swatch) => {
       swatch.addEventListener('click', () => {
@@ -70,6 +101,7 @@
         );
 
         card.dataset.hasSecondary = secondarySrc ? 'true' : 'false';
+        setImageView('primary');
 
         if (price && nextPrice) {
           price.textContent = nextPrice;

@@ -18,6 +18,17 @@
     ]
   },
   {
+    "name": "Site verification",
+    "settings": [
+      {
+        "type": "text",
+        "id": "google_site_verification",
+        "label": "Google site verification code",
+        "info": "Use Search Console's HTML tag method and paste only the content value from the meta tag."
+      }
+    ]
+  },
+  {
     "name": "t:general.typography",
     "settings": [
       {

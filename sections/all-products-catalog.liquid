@@ -1,0 +1,174 @@
+{% comment %}
+  Homepage catalog with local search, filters, and 4-item pagination.
+{% endcomment %}
+
+{% liquid
+  assign catalog_collection = collections.all
+  assign products_per_page = 4
+%}
+
+<section class="domaine-scope bg-white px-5 py-12 sm:px-8 lg:px-12" data-domaine-catalog data-page-size="{{ products_per_page }}">
+  <div class="mx-auto grid max-w-7xl gap-8">
+    <div class="flex flex-col gap-5 border-b border-[#e8e8e8] pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <div class="grid gap-2">
+        <h1 class="text-2xl font-semibold leading-tight tracking-normal text-[#111111] sm:text-3xl">
+          All products
+        </h1>
+        <p class="text-sm leading-relaxed text-zinc-600" data-domaine-catalog-count>
+          {{ catalog_collection.products_count }} products
+        </p>
+      </div>
+
+      <div class="grid gap-3 lg:min-w-[680px]">
+        <label class="block">
+          <span class="sr-only">Search products</span>
+          <input
+            class="h-[42px] w-full rounded-lg border border-zinc-300 px-4 text-sm leading-none text-[#111111] outline-none transition focus:border-[#0a4874] focus:ring-2 focus:ring-[#0a4874]"
+            type="search"
+            placeholder="Search products"
+            data-domaine-catalog-search
+          >
+        </label>
+
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <label class="block">
+            <span class="sr-only">Availability</span>
+            <select class="h-[42px] w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-[#111111] outline-none transition focus:border-[#0a4874] focus:ring-2 focus:ring-[#0a4874]" data-domaine-catalog-filter="availability">
+              <option value="all">All availability</option>
+              <option value="in-stock">In stock</option>
+              <option value="sold-out">Sold out</option>
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="sr-only">Variant setup</span>
+            <select class="h-[42px] w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-[#111111] outline-none transition focus:border-[#0a4874] focus:ring-2 focus:ring-[#0a4874]" data-domaine-catalog-filter="variantSetup">
+              <option value="all">All variants</option>
+              <option value="has-variants">Has variants</option>
+              <option value="no-variants">No variants</option>
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="sr-only">Vendor</span>
+            <select class="h-[42px] w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-[#111111] outline-none transition focus:border-[#0a4874] focus:ring-2 focus:ring-[#0a4874]" data-domaine-catalog-filter="vendor">
+              <option value="all">All vendors</option>
+              {% assign seen_vendors = '|' %}
+              {% for product in catalog_collection.products %}
+                {% assign vendor_handle = product.vendor | handleize %}
+                {% assign vendor_token = vendor_handle | prepend: '|' | append: '|' %}
+                {% if product.vendor != blank %}
+                  {% unless seen_vendors contains vendor_token %}
+                    {% assign seen_vendors = seen_vendors | append: vendor_handle | append: '|' %}
+                    <option value="{{ vendor_handle }}">{{ product.vendor | escape }}</option>
+                  {% endunless %}
+                {% endif %}
+              {% endfor %}
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="sr-only">Product type</span>
+            <select class="h-[42px] w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-[#111111] outline-none transition focus:border-[#0a4874] focus:ring-2 focus:ring-[#0a4874]" data-domaine-catalog-filter="type">
+              <option value="all">All types</option>
+              {% assign seen_types = '|' %}
+              {% for product in catalog_collection.products %}
+                {% assign type_handle = product.type | handleize %}
+                {% assign type_token = type_handle | prepend: '|' | append: '|' %}
+                {% if product.type != blank %}
+                  {% unless seen_types contains type_token %}
+                    {% assign seen_types = seen_types | append: type_handle | append: '|' %}
+                    <option value="{{ type_handle }}">{{ product.type | escape }}</option>
+                  {% endunless %}
+                {% endif %}
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+
+        <button
+          class="w-fit text-sm font-medium leading-none text-[#0a4874] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2"
+          type="button"
+          data-domaine-catalog-reset
+        >
+          Clear filters
+        </button>
+      </div>
+    </div>
+
+    {% if catalog_collection.products_count > 0 %}
+      <ul class="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4" role="list" data-domaine-catalog-grid>
+        {% for product in catalog_collection.products %}
+          {% liquid
+            assign variant_setup = 'no-variants'
+            if product.variants.size > 1
+              assign variant_setup = 'has-variants'
+            endif
+
+            assign availability = 'sold-out'
+            if product.available
+              assign availability = 'in-stock'
+            endif
+          %}
+
+          <li
+            class="flex min-w-0 justify-center"
+            data-domaine-catalog-item
+            data-title="{{ product.title | downcase | escape }}"
+            data-vendor="{{ product.vendor | handleize }}"
+            data-type="{{ product.type | handleize }}"
+            data-tags="{{ product.tags | join: ' ' | downcase | escape }}"
+            data-availability="{{ availability }}"
+            data-variant-setup="{{ variant_setup }}"
+            {% if forloop.index > products_per_page %}
+              hidden
+            {% endif %}
+          >
+            {% render 'domaine-product-card', product: product, media_link: true %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="hidden rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-600" data-domaine-catalog-empty>
+        No products match the current search and filters.
+      </div>
+
+      <nav class="hidden flex flex-wrap items-center justify-center gap-3 border-t border-[#e8e8e8] pt-6" aria-label="Product catalog pagination" data-domaine-catalog-pagination hidden>
+        <button
+          class="inline-flex h-[38px] items-center justify-center rounded-full border border-zinc-300 px-4 text-sm font-medium leading-none text-[#111111] transition hover:border-[#0a4874] hover:text-[#0a4874] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
+          type="button"
+          data-domaine-catalog-prev
+        >
+          Previous
+        </button>
+
+        <div class="flex flex-wrap justify-center gap-2" data-domaine-catalog-pages></div>
+
+        <button
+          class="inline-flex h-[38px] items-center justify-center rounded-full border border-zinc-300 px-4 text-sm font-medium leading-none text-[#111111] transition hover:border-[#0a4874] hover:text-[#0a4874] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400"
+          type="button"
+          data-domaine-catalog-next
+        >
+          Next
+        </button>
+      </nav>
+    {% else %}
+      <div class="rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-600">
+        No products are available in the store yet.
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "All products catalog",
+  "settings": [],
+  "presets": [
+    {
+      "name": "All products catalog",
+      "category": "Products"
+    }
+  ]
+}
+{% endschema %}

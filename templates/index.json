@@ -9,22 +9,12 @@
  */
 {
   "sections": {
-    "domaine_assessment": {
-      "type": "domaine-product-card-demo",
-      "settings": {
-      }
-    },
     "main": {
-      "type": "product-list",
-      "settings": {
-        "heading": "Featured products",
-        "products_to_show": 4,
-        "show_view_all": true
-      }
+      "type": "all-products-catalog",
+      "settings": {}
     }
   },
   "order": [
-    "domaine_assessment",
     "main"
   ]
 }

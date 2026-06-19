@@ -2,10 +2,12 @@
   Reusable Domaine product card.
   Accepts:
   - product: Shopify product object
+  - media_link: optional boolean. If true, image area links to the product page.
 {% endcomment %}
 
 {% liquid
   assign card_product = product
+  assign card_media_links_to_product = media_link | default: false
   assign selected_variant = card_product.selected_or_first_available_variant
   assign color_option_index = nil
   assign color_option = nil
@@ -62,6 +64,10 @@
         break
       endif
     endfor
+  endif
+
+  if primary_image == nil
+    assign primary_image = card_product.featured_image
   endif
 
   if card_product.media.size > 1
@@ -126,16 +132,24 @@
     <div class="domaine-card-media block w-full">
       <div class="block w-full">
         <div class="domaine-card-frame rounded-[16px] border border-[#e8e8e8] bg-white p-4 transition duration-300">
-        <button
-          type="button"
-          class="relative block aspect-[275/301] w-full overflow-hidden bg-white p-0"
-          data-domaine-media-toggle
-          aria-label="Show alternate image for {{ card_product.title | escape }}"
-          aria-pressed="false"
-          {% unless secondary_image %}
-            disabled
-          {% endunless %}
-        >
+        {% if card_media_links_to_product %}
+          <a
+            class="relative block aspect-[275/301] w-full overflow-hidden bg-white p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a4874] focus-visible:ring-offset-2"
+            href="{{ card_product.url }}"
+            aria-label="View details for {{ card_product.title | escape }}"
+          >
+        {% else %}
+          <button
+            type="button"
+            class="relative block aspect-[275/301] w-full overflow-hidden bg-white p-0"
+            data-domaine-media-toggle
+            aria-label="Show alternate image for {{ card_product.title | escape }}"
+            aria-pressed="false"
+            {% unless secondary_image %}
+              disabled
+            {% endunless %}
+          >
+        {% endif %}
           <span
             class="absolute left-3 top-3 z-10 inline-flex h-[34px] min-w-[94px] items-center justify-center rounded-full border border-[#ff0000] bg-white px-4 text-[15px] font-medium leading-[18px] tracking-normal text-[#ff0000]"
             data-domaine-sale-badge
@@ -177,7 +191,11 @@
             height="875"
             loading="lazy"
           >
-        </button>
+        {% if card_media_links_to_product %}
+          </a>
+        {% else %}
+          </button>
+        {% endif %}
         </div>
 
         {% if color_option != nil and color_option.values.size > 1 %}
@@ -265,6 +283,10 @@
                       break
                     endif
                   endfor
+                endif
+
+                if swatch_primary_image == nil
+                  assign swatch_primary_image = card_product.featured_image
                 endif
 
                 for media in card_product.media
@@ -356,6 +378,46 @@
               </button>
             {% endfor %}
           </div>
+        {% elsif card_product.variants.size > 1 %}
+          <label class="mt-5 block">
+            <span class="sr-only">Choose variant</span>
+            <select
+              class="h-[42px] w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-[#111111] outline-none transition focus:border-[#0a4874] focus:ring-2 focus:ring-[#0a4874]"
+              data-domaine-variant-select
+            >
+              {% for variant in card_product.variants %}
+                {% liquid
+                  assign variant_on_sale = false
+                  if variant.compare_at_price > variant.price
+                    assign variant_on_sale = true
+                  endif
+
+                  assign variant_primary_image = variant.featured_media.preview_image
+                  if variant_primary_image == nil
+                    assign variant_primary_image = card_product.featured_image
+                  endif
+                %}
+
+                <option
+                  value="{{ variant.id }}"
+                  data-price="{{ variant.price | money | escape }}"
+                  data-compare-price="{{ variant.compare_at_price | money | escape }}"
+                  data-on-sale="{% if variant_on_sale %}true{% else %}false{% endif %}"
+                  data-available="{% if variant.available %}true{% else %}false{% endif %}"
+                  {% if variant_primary_image %}
+                    data-primary-src="{{ variant_primary_image | image_url: width: 700 }}"
+                    data-primary-srcset="{{ variant_primary_image | image_url: width: 350 }} 350w, {{ variant_primary_image | image_url: width: 700 }} 700w, {{ variant_primary_image | image_url: width: 1000 }} 1000w"
+                  {% endif %}
+                  data-primary-alt="{{ variant.title | escape }} {{ card_product.title | escape }}"
+                  {% if variant.id == selected_variant.id %}
+                    selected
+                  {% endif %}
+                >
+                  {{ variant.title | escape }}{% unless variant.available %} - Sold out{% endunless %}
+                </option>
+              {% endfor %}
+            </select>
+          </label>
         {% endif %}
       </div>
     </div>

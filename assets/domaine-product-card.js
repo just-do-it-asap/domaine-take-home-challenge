@@ -7,6 +7,8 @@
   addToCartButton.addEventListener('click', () => {
     console.log('addToCartButton = ', addToCartButton.variantId);
 
+    if (!addToCartButton.variantId) return;
+
     let formData = {
       'items': [{
         'id': addToCartButton.variantId,
